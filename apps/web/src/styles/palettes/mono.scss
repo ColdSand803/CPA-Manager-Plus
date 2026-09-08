@@ -1,0 +1,192 @@
+/**
+ * 单色高科技配色包（Cyber-Mono）
+ *
+ * 参考 Antfu 极简风格与 Linear 现代黑客质感：
+ * - 纯白 / #050505 纯粹底色
+ * - #8884 通用带透明度灰阶边框
+ * - 几何微倒角（4px ~ 8px）去除大圆角笨重感
+ * - 消除杂色渐变与厚重阴影，留出呼吸感
+ * - 业务红线：保留 Success / Warning / Danger / Info 运维高可读性语义色
+ */
+
+/* ── 亮色 ───────────────────────────────────────────── */
+
+[data-palette='mono'] {
+  --app-bg: #ffffff;
+  --app-bg-gradient: none;
+  --app-bg-blob-1-opacity: 0;
+  --app-bg-blob-2-opacity: 0;
+
+  --app-surface: #ffffff;
+  --app-surface-strong: #ffffff;
+  --app-surface-muted: rgba(0, 0, 0, 0.02);
+
+  --app-border: #8884;
+  --app-border-strong: #8886;
+
+  --app-text-primary: #000000;
+  --app-text-regular: #555555;
+  --app-text-muted: #888888;
+
+  --app-accent: #333333;
+  --app-accent-soft: rgba(0, 0, 0, 0.06);
+
+  --surface-subtle: rgba(0, 0, 0, 0.02);
+  --surface-subtle-hover: rgba(0, 0, 0, 0.04);
+  --surface-subtle-strong: rgba(0, 0, 0, 0.06);
+  --border-subtle: #8883;
+  --border-subtle-dashed: #8884;
+
+  --app-radius-lg: 8px;
+  --app-radius-md: 6px;
+  --app-radius-sm: 4px;
+  --app-blur: 0px;
+
+  --sidebar-bg-color: #ffffff;
+  --sidebar-text-color: #555555;
+  --sidebar-active-text-color: #000000;
+  --sidebar-hover-bg-color: rgba(0, 0, 0, 0.04);
+  --sidebar-logo-bg-color: transparent;
+  --sidebar-shadow: none;
+
+  --glass-bg: #ffffff;
+  --glass-bg-secondary: rgba(0, 0, 0, 0.02);
+  --glass-border: #8884;
+  --glass-shadow: none;
+  --glass-blur: 0px;
+  --glass-backdrop-filter: none;
+  --glass-filter: none;
+
+  --app-input-bg: #ffffff;
+  --app-input-bg-focus: #ffffff;
+  --app-input-border: #8886;
+  --app-input-border-focus: #000000;
+
+  --bg-quinary: rgba(0, 0, 0, 0.02);
+  --text-quaternary: #aaaaaa;
+
+  --border-hover: #8888;
+
+  /* 主色改为中性灰阶：不再是蓝色品牌色，但保留色阶结构供组件引用 */
+  --data-blue-base: #333333;
+  --data-blue-dark-2: #000000;
+  --data-blue-light-3: rgba(0, 0, 0, 0.24);
+  --data-blue-light-5: rgba(0, 0, 0, 0.16);
+  --data-blue-light-7: rgba(0, 0, 0, 0.1);
+  --data-blue-light-8: rgba(0, 0, 0, 0.06);
+  --data-blue-light-9: rgba(0, 0, 0, 0.04);
+
+  --primary-contrast: #ffffff;
+  --primary-solid: #000000;
+  --primary-solid-hover: #333333;
+  --primary-solid-active: #000000;
+  --primary-ring: rgba(0, 0, 0, 0.16);
+
+  --data-track-bg: rgba(0, 0, 0, 0.08);
+
+  /* 中性徽章跟随灰阶；success/warning/danger/info 徽章保持语义色不覆盖 */
+  --data-badge-neutral-text: #555555;
+  --data-badge-neutral-bg: rgba(0, 0, 0, 0.04);
+  --data-badge-neutral-border: #8884;
+
+  --shadow: none;
+  --shadow-lg: none;
+  --app-shadow: none;
+  --app-shadow-soft: none;
+  --floating-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  --c-scrollbar: #e5e5e5;
+  --c-scrollbar-hover: #bbbbbb;
+}
+
+/* ── 暗色 ───────────────────────────────────────────── */
+
+[data-palette='mono'][data-theme='dark'] {
+  --app-bg: #050505;
+  --app-bg-gradient: none;
+  --app-bg-blob-1-opacity: 0;
+  --app-bg-blob-2-opacity: 0;
+
+  --app-surface: #0c0c0c;
+  --app-surface-strong: #121212;
+  --app-surface-muted: rgba(255, 255, 255, 0.03);
+
+  --app-border: #8884;
+  --app-border-strong: #8886;
+
+  --app-text-primary: #ffffff;
+  --app-text-regular: #bbbbbb;
+  --app-text-muted: #888888;
+
+  --app-accent: #dddddd;
+  --app-accent-soft: rgba(255, 255, 255, 0.08);
+
+  --surface-subtle: rgba(255, 255, 255, 0.03);
+  --surface-subtle-hover: rgba(255, 255, 255, 0.06);
+  --surface-subtle-strong: rgba(255, 255, 255, 0.09);
+  --border-subtle: #8883;
+  --border-subtle-dashed: #8884;
+
+  --app-radius-lg: 8px;
+  --app-radius-md: 6px;
+  --app-radius-sm: 4px;
+  --app-blur: 0px;
+
+  --sidebar-bg-color: #080808;
+  --sidebar-text-color: #bbbbbb;
+  --sidebar-active-text-color: #ffffff;
+  --sidebar-hover-bg-color: rgba(255, 255, 255, 0.06);
+  --sidebar-logo-bg-color: transparent;
+  --sidebar-shadow: none;
+
+  --glass-bg: #0c0c0c;
+  --glass-bg-secondary: rgba(255, 255, 255, 0.03);
+  --glass-border: #8884;
+  --glass-shadow: none;
+  --glass-blur: 0px;
+  --glass-backdrop-filter: none;
+  --glass-filter: none;
+
+  --app-input-bg: #101010;
+  --app-input-bg-focus: #141414;
+  --app-input-border: #8886;
+  --app-input-border-focus: #ffffff;
+
+  --bg-quinary: #0e0e0e;
+  --text-quaternary: #666666;
+
+  --border-hover: #8888;
+
+  --data-blue-base: #dddddd;
+  --data-blue-dark-2: #ffffff;
+  --data-blue-light-3: rgba(255, 255, 255, 0.24);
+  --data-blue-light-5: rgba(255, 255, 255, 0.16);
+  --data-blue-light-7: rgba(255, 255, 255, 0.12);
+  --data-blue-light-8: rgba(255, 255, 255, 0.08);
+  --data-blue-light-9: rgba(255, 255, 255, 0.06);
+
+  --primary-contrast: #000000;
+  --primary-solid: #eeeeee;
+  --primary-solid-hover: #ffffff;
+  --primary-solid-active: #eeeeee;
+  --primary-ring: rgba(255, 255, 255, 0.2);
+
+  --data-track-bg: rgba(255, 255, 255, 0.08);
+
+  --data-badge-neutral-text: #bbbbbb;
+  --data-badge-neutral-bg: rgba(255, 255, 255, 0.06);
+  --data-badge-neutral-border: #8884;
+
+  --shadow: none;
+  --shadow-lg: none;
+  --app-shadow: none;
+  --app-shadow-soft: none;
+  --floating-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+  --c-scrollbar: #181818;
+  --c-scrollbar-hover: #2e2e2e;
+}
+
+[data-palette='mono'] ::selection {
+  background: #8884;
+}

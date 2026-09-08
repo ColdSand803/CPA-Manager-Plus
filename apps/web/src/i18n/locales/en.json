@@ -4445,6 +4445,11 @@
     "dark": "Dark",
     "auto": "Auto"
   },
+  "palette": {
+    "switch": "Switch Palette",
+    "default": "Default",
+    "mono": "Monochrome"
+  },
   "visual_effects": {
     "switch": "Visual effects",
     "full": "Full effects",

@@ -1,0 +1,9 @@
+/**
+ * 配色主题包入口
+ *
+ * 必须在 themes.scss 之后引入，配色包才能覆盖其 token。
+ * 新增包时在这里 @use 一行。
+ */
+
+@use './default.scss';
+@use './mono.scss';

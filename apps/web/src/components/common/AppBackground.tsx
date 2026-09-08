@@ -1,8 +1,76 @@
+import { useEffect, useRef } from 'react';
+import { usePaletteStore, useVisualEffectsStore, useThemeStore } from '@/stores';
 import './AppBackground.scss';
 
 export function AppBackground() {
+  const palette = usePaletteStore((state) => state.palette);
+  const visualEffectsMode = useVisualEffectsStore((state) => state.mode);
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (palette !== 'mono' || visualEffectsMode === 'reduced') {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    const SPACING = 30;
+    const isDark = resolvedTheme === 'dark';
+    const dotColor = isDark ? 'rgba(255, 255, 255, ' : 'rgba(0, 0, 0, ';
+    const baseAlpha = isDark ? 0.08 : 0.05;
+
+    let time = 0;
+
+    const render = () => {
+      time += 0.015;
+      ctx.clearRect(0, 0, width, height);
+
+      for (let x = SPACING / 2; x < width; x += SPACING) {
+        for (let y = SPACING / 2; y < height; y += SPACING) {
+          const wave = Math.sin(x * 0.005 + time) * Math.cos(y * 0.005 + time);
+          const alpha = Math.max(0.01, baseAlpha + wave * 0.04);
+          const radius = Math.max(0.6, 1 + wave * 0.5);
+
+          ctx.beginPath();
+          ctx.arc(x, y + wave * 3, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `${dotColor}${alpha})`;
+          ctx.fill();
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [palette, visualEffectsMode, resolvedTheme]);
+
   return (
     <div className="app-background" aria-hidden="true">
+      {palette === 'mono' && visualEffectsMode !== 'reduced' && (
+        <canvas ref={canvasRef} className="app-background__mono-canvas" />
+      )}
       <svg className="app-background__shape app-background__shape-1" viewBox="0 0 200 200">
         <defs>
           <linearGradient id="cpa-app-bg-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">

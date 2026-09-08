@@ -37,9 +37,11 @@ import {
   useConfigStore,
   useLanguageStore,
   useNotificationStore,
+  usePaletteStore,
   useThemeStore,
   useVisualEffectsStore,
 } from '@/stores';
+import { PALETTES } from '@/theme/palettes';
 import { pluginsApi } from '@/services/api';
 import {
   collectPluginResourceEntries,
@@ -54,7 +56,7 @@ import { usePanelFeatureAvailability } from '@/hooks/usePanelFeatureAvailability
 import { getDemoLogoutPath, prefixRouteBase, stripRouteBase } from '@/features/demo/demoMode';
 import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER, STORAGE_KEY_SIDEBAR } from '@/utils/constants';
 import { isSupportedLanguage } from '@/utils/language';
-import type { Theme, VisualEffectsMode } from '@/types';
+import type { Palette, Theme, VisualEffectsMode } from '@/types';
 
 const SIDEBAR_ICON_SIZE = 20;
 const GITHUB_REPOSITORY_URL = 'https://github.com/seakee/CPA-Manager-Plus';
@@ -125,6 +127,15 @@ const headerIcons = {
       <circle cx="12" cy="12" r="10" />
       <path d="M2 12h20" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  ),
+  palette: (
+    <svg {...headerIconProps}>
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
     </svg>
   ),
   sun: (
@@ -248,6 +259,8 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
 
   const theme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
+  const palette = usePaletteStore((state) => state.palette);
+  const setPalette = usePaletteStore((state) => state.setPalette);
   const visualEffectsMode = useVisualEffectsStore((state) => state.mode);
   const setVisualEffectsMode = useVisualEffectsStore((state) => state.setMode);
   const language = useLanguageStore((state) => state.language);
@@ -263,11 +276,13 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
   });
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [paletteMenuOpen, setPaletteMenuOpen] = useState(false);
   const [visualEffectsMenuOpen, setVisualEffectsMenuOpen] = useState(false);
   const [pluginResources, setPluginResources] = useState<PluginResourceEntry[]>([]);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const languageMenuRef = useRef<HTMLDivElement | null>(null);
   const themeMenuRef = useRef<HTMLDivElement | null>(null);
+  const paletteMenuRef = useRef<HTMLDivElement | null>(null);
   const visualEffectsMenuRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
 
@@ -395,6 +410,32 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
   }, [themeMenuOpen]);
 
   useEffect(() => {
+    if (!paletteMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!paletteMenuRef.current?.contains(event.target as Node)) {
+        setPaletteMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setPaletteMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [paletteMenuOpen]);
+
+  useEffect(() => {
     if (!visualEffectsMenuOpen) {
       return;
     }
@@ -423,12 +464,21 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
   const toggleLanguageMenu = useCallback(() => {
     setLanguageMenuOpen((prev) => !prev);
     setThemeMenuOpen(false);
+    setPaletteMenuOpen(false);
     setVisualEffectsMenuOpen(false);
   }, []);
 
   const toggleThemeMenu = useCallback(() => {
     setThemeMenuOpen((prev) => !prev);
     setLanguageMenuOpen(false);
+    setPaletteMenuOpen(false);
+    setVisualEffectsMenuOpen(false);
+  }, []);
+
+  const togglePaletteMenu = useCallback(() => {
+    setPaletteMenuOpen((prev) => !prev);
+    setLanguageMenuOpen(false);
+    setThemeMenuOpen(false);
     setVisualEffectsMenuOpen(false);
   }, []);
 
@@ -436,6 +486,7 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
     setVisualEffectsMenuOpen((prev) => !prev);
     setLanguageMenuOpen(false);
     setThemeMenuOpen(false);
+    setPaletteMenuOpen(false);
   }, []);
 
   const handleThemeSelect = useCallback(
@@ -444,6 +495,14 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
       setThemeMenuOpen(false);
     },
     [setTheme]
+  );
+
+  const handlePaletteSelect = useCallback(
+    (nextPalette: Palette) => {
+      setPalette(nextPalette);
+      setPaletteMenuOpen(false);
+    },
+    [setPalette]
   );
 
   const handleVisualEffectsSelect = useCallback(
@@ -843,6 +902,40 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
                       aria-label={t(option.labelKey)}
                     >
                       <span className="theme-option-icon">{option.icon}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className={`palette-menu ${paletteMenuOpen ? 'open' : ''}`} ref={paletteMenuRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={togglePaletteMenu}
+                title={t('palette.switch', { defaultValue: 'Palette' })}
+                aria-label={t('palette.switch', { defaultValue: 'Palette' })}
+                aria-haspopup="menu"
+                aria-expanded={paletteMenuOpen}
+              >
+                {headerIcons.palette}
+              </Button>
+              {paletteMenuOpen && (
+                <div
+                  className="notification entering palette-menu-popover"
+                  role="menu"
+                  aria-label={t('palette.switch', { defaultValue: 'Palette' })}
+                >
+                  {PALETTES.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className={`palette-menu-option ${palette === option.key ? 'active' : ''}`}
+                      onClick={() => handlePaletteSelect(option.key)}
+                      role="menuitemradio"
+                      aria-checked={palette === option.key}
+                    >
+                      <span>{t(option.labelKey)}</span>
                     </button>
                   ))}
                 </div>

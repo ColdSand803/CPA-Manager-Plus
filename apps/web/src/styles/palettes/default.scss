@@ -1,0 +1,11 @@
+/**
+ * 默认配色包
+ *
+ * 等价于不设置 data-palette，实际取值由 themes.scss 的 :root / [data-theme] 提供。
+ * 这里保留空块是为了让切换器有一个显式的「默认」选项，也方便未来在默认包上做微调
+ * 而不必回头改 themes.scss。
+ */
+
+[data-palette='default'] {
+  /* 继承 themes.scss，无覆盖 */
+}

@@ -4443,6 +4443,11 @@
     "dark": "黑夜",
     "auto": "自動"
   },
+  "palette": {
+    "switch": "切換配色",
+    "default": "預設",
+    "mono": "單色極簡"
+  },
   "visual_effects": {
     "switch": "視覺效果",
     "full": "完整效果",

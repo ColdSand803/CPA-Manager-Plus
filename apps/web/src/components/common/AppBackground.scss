@@ -10,6 +10,15 @@
   background-image: var(--app-bg-gradient);
 }
 
+.app-background__mono-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .app-background__shape {
   position: absolute;
   filter: blur(var(--app-bg-blob-blur));
@@ -48,15 +57,21 @@
   }
 }
 
-[data-visual-effects='reduced'] .app-background__shape {
-  display: none;
+[data-palette='mono'] .app-background__shape {
+  display: none !important;
+}
+
+[data-visual-effects='reduced'] .app-background__shape,
+[data-visual-effects='reduced'] .app-background__mono-canvas {
+  display: none !important;
   filter: none;
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce) {
-  .app-background__shape {
-    display: none;
+  .app-background__shape,
+  .app-background__mono-canvas {
+    display: none !important;
     filter: none;
     animation: none;
   }
