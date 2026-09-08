@@ -940,3 +940,69 @@ textarea {
 .hint {
   color: var(--text-secondary);
 }
+
+/* ── 瀑布流与微光动效 (Slide Enter & Motion) ── */
+
+@keyframes slide-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-visual-effects='reduced']) {
+    .slide-enter,
+    .slide-enter-content > * {
+      --enter-stage: 0;
+      --enter-step: 60ms;
+      --enter-initial: 0ms;
+      animation: slide-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both 1;
+      animation-delay: calc(var(--enter-initial) + var(--enter-stage) * var(--enter-step));
+    }
+
+    .slide-enter-content > *:nth-child(1) { --enter-stage: 1 !important; }
+    .slide-enter-content > *:nth-child(2) { --enter-stage: 2 !important; }
+    .slide-enter-content > *:nth-child(3) { --enter-stage: 3 !important; }
+    .slide-enter-content > *:nth-child(4) { --enter-stage: 4 !important; }
+    .slide-enter-content > *:nth-child(5) { --enter-stage: 5 !important; }
+    .slide-enter-content > *:nth-child(6) { --enter-stage: 6 !important; }
+    .slide-enter-content > *:nth-child(7) { --enter-stage: 7 !important; }
+    .slide-enter-content > *:nth-child(8) { --enter-stage: 8 !important; }
+    .slide-enter-content > *:nth-child(9) { --enter-stage: 9 !important; }
+    .slide-enter-content > *:nth-child(10) { --enter-stage: 10 !important; }
+    .slide-enter-content > *:nth-child(11) { --enter-stage: 11 !important; }
+    .slide-enter-content > *:nth-child(12) { --enter-stage: 12 !important; }
+  }
+}
+
+[data-palette='mono'] {
+  .card,
+  .stat-card {
+    transition:
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+      border-color: #8888;
+      box-shadow: 0 0 24px rgba(255, 255, 255, 0.03);
+    }
+  }
+
+  .btn-primary {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}

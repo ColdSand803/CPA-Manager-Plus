@@ -4,6 +4,12 @@
 
 export type Theme = 'white' | 'dark' | 'auto';
 
+/**
+ * 配色主题包。与 Theme（明暗）正交：明暗决定亮/暗，配色包决定用哪套中性色与主色。
+ * 状态色不随配色包变化，详见 styles/palettes/README.md。
+ */
+export type Palette = 'default' | 'mono';
+
 export type VisualEffectsMode = 'full' | 'reduced';
 
 export type Language = 'zh-CN' | 'zh-TW' | 'en' | 'ru';
