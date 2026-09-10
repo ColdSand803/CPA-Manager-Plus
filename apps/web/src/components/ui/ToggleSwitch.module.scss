@@ -26,7 +26,7 @@
 .track {
   width: 42px;
   height: 24px;
-  background: color-mix(in srgb, var(--text-secondary) 20%, var(--surface-subtle));
+  background: var(--toggle-track-bg, color-mix(in srgb, var(--text-secondary) 20%, var(--surface-subtle)));
   border-radius: $radius-full;
   position: relative;
   box-shadow:
@@ -43,21 +43,28 @@
   left: 2px;
   width: 20px;
   height: 20px;
-  background: #fff;
+  background: var(--toggle-thumb-bg, #fff);
   border-radius: $radius-full;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.18),
     0 0 0 1px rgba(15, 23, 42, 0.04);
-  transition: transform $transition-fast;
+  transition:
+    transform $transition-fast,
+    background-color $transition-fast,
+    box-shadow $transition-fast;
 }
 
 .root input:checked + .track {
-  background: var(--primary-color);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-active) 70%, transparent);
+  background: var(--toggle-track-checked, var(--primary-solid, var(--primary-color)));
+  box-shadow: var(--toggle-track-checked-shadow, inset 0 0 0 1px color-mix(in srgb, var(--primary-active) 70%, transparent));
 }
 
 .root input:checked + .track .thumb {
   transform: translateX(18px);
+  background: var(--toggle-thumb-checked, var(--primary-contrast, #fff));
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .label {

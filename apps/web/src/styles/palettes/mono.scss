@@ -82,6 +82,13 @@
   --primary-solid-active: #000000;
   --primary-ring: rgba(0, 0, 0, 0.16);
 
+  /* ToggleSwitch 单色极简适配 */
+  --toggle-track-bg: rgba(0, 0, 0, 0.08);
+  --toggle-track-checked: #000000;
+  --toggle-thumb-bg: #ffffff;
+  --toggle-thumb-checked: #ffffff;
+  --toggle-track-checked-shadow: inset 0 0 0 1px #000000;
+
   --data-track-bg: rgba(0, 0, 0, 0.08);
 
   /* 中性徽章跟随灰阶；success/warning/danger/info 徽章保持语义色不覆盖 */
@@ -170,6 +177,13 @@
   --primary-solid-hover: #ffffff;
   --primary-solid-active: #eeeeee;
   --primary-ring: rgba(255, 255, 255, 0.2);
+
+  /* ToggleSwitch 单色极简适配：开启态白底黑钮，高反差高对比度 */
+  --toggle-track-bg: rgba(255, 255, 255, 0.12);
+  --toggle-track-checked: #ffffff;
+  --toggle-thumb-bg: #cccccc;
+  --toggle-thumb-checked: #050505;
+  --toggle-track-checked-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 
   --data-track-bg: rgba(255, 255, 255, 0.08);
 

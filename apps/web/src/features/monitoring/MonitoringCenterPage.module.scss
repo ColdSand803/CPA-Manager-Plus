@@ -276,9 +276,12 @@
 }
 
 .actionButtonPrimary {
-  border-color: var(--monitor-accent);
-  background: var(--monitor-accent);
-  color: #fff;
+  border-color: var(--primary-solid, var(--monitor-accent));
+  background: var(--primary-solid, var(--monitor-accent));
+  color: var(--primary-contrast, #fff);
+  svg {
+    stroke: currentColor;
+  }
 }
 
 .quickNavLink {
@@ -294,9 +297,9 @@
 }
 
 .actionButtonPrimary:hover {
-  border-color: var(--primary-hover);
-  background: var(--primary-hover);
-  color: #fff;
+  border-color: var(--primary-solid-hover, var(--primary-hover));
+  background: var(--primary-solid-hover, var(--primary-hover));
+  color: var(--primary-contrast, #fff);
 }
 
 .actionButton:disabled,
@@ -412,8 +415,8 @@
 
 .tabButtonActive,
 .tabButtonActive:hover {
-  background: var(--monitor-accent);
-  color: #fff;
+  background: var(--primary-solid, var(--monitor-accent));
+  color: var(--primary-contrast, #fff);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--monitor-accent) 18%, transparent);
 }
 
@@ -446,8 +449,8 @@
 }
 
 .tabButtonActive .tabBadge {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
+  background: color-mix(in srgb, var(--primary-contrast) 22%, transparent);
+  color: var(--primary-contrast, #fff);
 }
 
 .tabBadgeFailure {
@@ -456,8 +459,8 @@
 }
 
 .tabButtonActive .tabBadgeFailure {
-  background: rgba(255, 255, 255, 0.28);
-  color: #fff;
+  background: color-mix(in srgb, var(--primary-contrast) 28%, transparent);
+  color: var(--primary-contrast, #fff);
 }
 
 .tabsBarCards {
