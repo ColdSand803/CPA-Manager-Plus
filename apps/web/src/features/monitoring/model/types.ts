@@ -1,5 +1,8 @@
-import type { ApiKeyAlias } from '@/services/api/usageService';
-import type { ResponseHeaderMetadata } from '@/services/api/usageService';
+import type {
+  ApiKeyAlias,
+  MonitoringAnalyticsCoverage,
+  ResponseHeaderMetadata,
+} from '@/services/api/usageService';
 import type { AuthFileItem } from '@/types/authFile';
 import type { Config } from '@/types/config';
 import type { ModelPrice } from '@/utils/usage';
@@ -157,6 +160,12 @@ export type MonitoringEventRow = {
   model: string;
   requestedModel?: string;
   resolvedModel?: string;
+  responseModel?: string;
+  sessionId?: string;
+  parentSessionId?: string;
+  accessTokenSha256?: string;
+  generate?: boolean;
+  stream?: boolean;
   endpoint: string;
   endpointMethod: string;
   endpointPath: string;
@@ -406,6 +415,7 @@ export interface UseMonitoringDataReturn {
   channels: MonitoringChannelMeta[];
   channelsLoaded: boolean;
   summary: MonitoringSummary;
+  coverage?: MonitoringAnalyticsCoverage;
   metadata: MonitoringMetadata;
   statusChips: MonitoringStatusChip[];
   timeline: MonitoringTimelinePoint[];

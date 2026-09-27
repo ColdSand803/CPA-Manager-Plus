@@ -14,6 +14,7 @@ export { useUsageServiceStore } from './useUsageServiceStore';
 export {
   captureQuotaCacheGeneration,
   commitIfQuotaCacheCurrent,
+  isQuotaCacheGenerationCurrent,
   useQuotaStore,
 } from './useQuotaStore';
 export { useOpenAIEditDraftStore } from './useOpenAIEditDraftStore';

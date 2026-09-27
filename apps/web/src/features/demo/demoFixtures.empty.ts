@@ -35,12 +35,33 @@ export const getDemoModelPriceUsageSummary = () => ({
   truncated: false,
   models: [],
 });
+export const getDemoRuntimeModelPricingStatus = () => ({
+  models: [],
+  unpricedModels: [],
+  count: 0,
+  unpricedCount: 0,
+});
 export const getDemoUsagePayload = () => emptyObject;
 export const getDemoUsageServiceInfo = () => emptyObject;
 export const getDemoUsageServiceStatus = () => emptyObject;
 export const getDemoAccountProcessingPolicy = () => emptyObject;
 export const getDemoQuotaStoreState = () => emptyObject;
 export const getDemoQuotaCooldowns = () => emptyArray;
+export const previewDemoUsageArchive = (cutoffTimestampMs: number) => ({
+  cutoff_timestamp_ms: cutoffTimestampMs,
+  target_event_id: 0,
+  event_count: 0,
+  estimated_bytes: 0,
+});
+export const createDemoUsageArchive = (_cutoffTimestampMs: number) => emptyObject;
+export const getDemoUsageArchive = (_runId: string) => emptyObject;
+export const getDemoUsageArchives = (_limit = 20) => ({ runs: [] });
+export const resumeDemoUsageArchive = (_runId: string) => emptyObject;
+export const verifyDemoUsageArchive = (_runId: string) => emptyObject;
+export const deleteDemoUsageArchive = (_runId: string) => emptyObject;
+export const cancelDemoUsageArchive = (_runId: string) => emptyObject;
+export const getDemoUsageMaintenance = () => emptyObject;
+export const resetDemoUsageArchiveState = () => undefined;
 export const getDemoHeaderSnapshots = () => emptyObject;
 export const getDemoCodexInspectionRuns = () => ({ items: [] });
 export const getDemoCodexInspectionRun = () => ({ results: [] });

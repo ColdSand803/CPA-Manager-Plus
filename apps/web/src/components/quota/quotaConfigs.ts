@@ -7,7 +7,11 @@ import type {
   CodexQuotaWindow,
   CodexRateLimitResetCredit,
   CredentialScopedQuotaState,
+  DevinQuotaData,
+  DevinQuotaState,
   KimiQuotaState,
+  MetaQuotaData,
+  MetaQuotaState,
   XaiBillingSummary,
   XaiQuotaState,
 } from '@/types';
@@ -18,6 +22,7 @@ import type {
   ClaudeQuotaData,
   CodexQuotaData,
   KimiQuotaData,
+  QuotaFetchContext,
 } from '@/utils/quota';
 import {
   buildCodexQuotaWindows,
@@ -25,7 +30,9 @@ import {
   fetchClaudeQuota,
   fetchCodexQuota,
   fetchCodexQuotaSummary,
+  fetchDevinQuota,
   fetchKimiQuota,
+  fetchMetaQuota,
   fetchXaiQuota,
   filterFreshCodexQuotaWindows,
   findCodexProviderWindowMatch,
@@ -35,6 +42,7 @@ import {
   resolveCodexUsageQuotaScope,
   resolveCodexPlanType,
   shouldClearInheritedCodexQuotaProgress,
+  mergeCodexResetCreditsEvidence,
 } from '@/utils/quota';
 import {
   buildObservedCodexQuotaFromHeaderSnapshot,
@@ -52,7 +60,9 @@ import {
   scopeQuotaStateToCredential,
 } from '@/utils/quota/credentialScope';
 
-type QuotaType = 'antigravity' | 'claude' | 'codex' | 'kimi' | 'xai';
+type QuotaType = 'antigravity' | 'claude' | 'codex' | 'kimi' | 'xai' | 'devin' | 'meta';
+
+export type { QuotaFetchContext };
 
 export interface QuotaConfig<TState, TData> {
   type: QuotaType;
@@ -60,11 +70,12 @@ export interface QuotaConfig<TState, TData> {
   fetchQuota: (
     file: AuthFileItem,
     t: TFunction,
-    requestScope?: AuthFilesApiRequestScope
+    requestScope?: AuthFilesApiRequestScope,
+    context?: QuotaFetchContext
   ) => Promise<TData>;
   getStoreKey?: (file: AuthFileItem) => string;
   buildLoadingState: (file?: AuthFileItem) => TState;
-  buildSuccessState: (data: TData, file?: AuthFileItem) => TState;
+  buildSuccessState: (data: TData, file?: AuthFileItem, currentState?: TState) => TState;
   buildErrorState: (message: string, status?: number, file?: AuthFileItem) => TState;
   buildFailureState?: (
     message: string,
@@ -675,30 +686,36 @@ export const CODEX_CONFIG: QuotaConfig<CodexQuotaState, CodexQuotaData> = {
     windows: [],
     ...buildQuotaCredentialIdentity(file),
   }),
-  buildSuccessState: (data, file) => ({
-    status: 'success',
-    windows: data.windows,
-    quotaInventoryObserved: data.quotaInventoryObserved,
-    planType: data.planType,
-    subscriptionActiveUntil: data.subscriptionActiveUntil,
-    creditsHasCredits: data.creditsHasCredits,
-    creditsUnlimited: data.creditsUnlimited,
-    creditsBalance: data.creditsBalance,
-    creditsOverageLimitReached: data.creditsOverageLimitReached,
-    creditsApproxLocalMessages: data.creditsApproxLocalMessages,
-    creditsApproxCloudMessages: data.creditsApproxCloudMessages,
-    spendControlReached: data.spendControlReached,
-    spendControlIndividualLimit: data.spendControlIndividualLimit,
-    rateLimitResetCreditsAvailableCount: data.rateLimitResetCreditsAvailableCount,
-    rateLimitResetCredits: data.rateLimitResetCredits,
-    rateLimitResetCreditsError: data.rateLimitResetCreditsError,
-    resetCreditsEvidenceAtMs: data.resetCreditsEvidenceAtMs,
-    ...buildQuotaCredentialIdentity(file),
-    fetchedAtMs:
-      readFiniteTimestamp(data.observedAtMs) ??
-      readFiniteTimestamp(data.windows[0]?.observedAtMs) ??
-      Date.now(),
-  }),
+  buildSuccessState: (data, file, currentState) => {
+    const resetEvidence = mergeCodexResetCreditsEvidence(currentState, data);
+    return {
+      status: 'success',
+      windows: data.windows,
+      quotaInventoryObserved: data.quotaInventoryObserved,
+      planType: data.planType,
+      subscriptionActiveUntil: data.subscriptionActiveUntil,
+      creditsHasCredits: data.creditsHasCredits,
+      creditsUnlimited: data.creditsUnlimited,
+      creditsBalance: data.creditsBalance,
+      creditsOverageLimitReached: data.creditsOverageLimitReached,
+      creditsApproxLocalMessages: data.creditsApproxLocalMessages,
+      creditsApproxCloudMessages: data.creditsApproxCloudMessages,
+      spendControlReached: data.spendControlReached,
+      spendControlIndividualLimit: data.spendControlIndividualLimit,
+      rateLimitResetCreditsAvailableCount: resetEvidence.rateLimitResetCreditsAvailableCount,
+      rateLimitResetCredits: resetEvidence.rateLimitResetCredits,
+      rateLimitResetCreditsError: resetEvidence.rateLimitResetCreditsError,
+      resetCreditsEvidenceAtMs: resetEvidence.resetCreditsEvidenceAtMs,
+      resetCreditsCountEvidenceAtMs: resetEvidence.resetCreditsCountEvidenceAtMs,
+      resetCreditsDetailEvidenceAtMs: resetEvidence.resetCreditsDetailEvidenceAtMs,
+      resetCreditsDetailStale: resetEvidence.resetCreditsDetailStale,
+      ...buildQuotaCredentialIdentity(file),
+      fetchedAtMs:
+        readFiniteTimestamp(data.observedAtMs) ??
+        readFiniteTimestamp(data.windows[0]?.observedAtMs) ??
+        Date.now(),
+    };
+  },
   buildErrorState: (message, status, file) => ({
     status: 'error',
     windows: [],
@@ -715,6 +732,38 @@ export const CODEX_CONFIG: QuotaConfig<CodexQuotaState, CodexQuotaData> = {
 export const CODEX_SUMMARY_CONFIG: QuotaConfig<CodexQuotaState, CodexQuotaData> = {
   ...CODEX_CONFIG,
   fetchQuota: fetchCodexQuotaSummary,
+  buildSuccessState: (data, file, currentState) => {
+    const resetEvidence = mergeCodexResetCreditsEvidence(currentState, data, {
+      isFullDetailObservation: false,
+    });
+    return {
+      status: 'success',
+      windows: data.windows,
+      quotaInventoryObserved: data.quotaInventoryObserved,
+      planType: data.planType,
+      subscriptionActiveUntil: data.subscriptionActiveUntil,
+      creditsHasCredits: data.creditsHasCredits,
+      creditsUnlimited: data.creditsUnlimited,
+      creditsBalance: data.creditsBalance,
+      creditsOverageLimitReached: data.creditsOverageLimitReached,
+      creditsApproxLocalMessages: data.creditsApproxLocalMessages,
+      creditsApproxCloudMessages: data.creditsApproxCloudMessages,
+      spendControlReached: data.spendControlReached,
+      spendControlIndividualLimit: data.spendControlIndividualLimit,
+      rateLimitResetCreditsAvailableCount: resetEvidence.rateLimitResetCreditsAvailableCount,
+      rateLimitResetCredits: resetEvidence.rateLimitResetCredits,
+      rateLimitResetCreditsError: resetEvidence.rateLimitResetCreditsError,
+      resetCreditsEvidenceAtMs: resetEvidence.resetCreditsEvidenceAtMs,
+      resetCreditsCountEvidenceAtMs: resetEvidence.resetCreditsCountEvidenceAtMs,
+      resetCreditsDetailEvidenceAtMs: resetEvidence.resetCreditsDetailEvidenceAtMs,
+      resetCreditsDetailStale: resetEvidence.resetCreditsDetailStale,
+      ...buildQuotaCredentialIdentity(file),
+      fetchedAtMs:
+        readFiniteTimestamp(data.observedAtMs) ??
+        readFiniteTimestamp(data.windows[0]?.observedAtMs) ??
+        Date.now(),
+    };
+  },
 };
 
 export const KIMI_CONFIG: QuotaConfig<KimiQuotaState, KimiQuotaData> = {
@@ -771,3 +820,82 @@ export const XAI_CONFIG: QuotaConfig<XaiQuotaState, XaiBillingSummary> = {
   }),
   scopeState: scopeCredentialQuotaState,
 };
+
+export const DEVIN_CONFIG: QuotaConfig<DevinQuotaState, DevinQuotaData> = {
+  type: 'devin',
+  i18nPrefix: 'devin_quota',
+  fetchQuota: fetchDevinQuota,
+  getStoreKey: getQuotaCredentialStoreKey,
+  buildLoadingState: (file) => ({
+    status: 'loading',
+    windows: [],
+    observedAtMs: null,
+    plan: null,
+    planStartMs: null,
+    planEndMs: null,
+    ...buildQuotaCredentialIdentity(file),
+  }),
+  buildSuccessState: (data, file) => ({
+    status: 'success',
+    windows: data.windows,
+    observedAtMs: data.observedAtMs,
+    plan: data.plan,
+    planStartMs: data.planStartMs,
+    planEndMs: data.planEndMs,
+    ...buildQuotaCredentialIdentity(file),
+    fetchedAtMs: data.observedAtMs ?? Date.now(),
+  }),
+  buildErrorState: (message, status, file) => ({
+    status: 'error',
+    windows: [],
+    observedAtMs: null,
+    plan: null,
+    planStartMs: null,
+    planEndMs: null,
+    error: message,
+    errorStatus: status,
+    ...buildQuotaCredentialIdentity(file),
+    failedAtMs: Date.now(),
+  }),
+  scopeState: scopeCredentialQuotaState,
+};
+
+export const META_CONFIG: QuotaConfig<MetaQuotaState, MetaQuotaData> = {
+  type: 'meta',
+  i18nPrefix: 'meta_quota',
+  fetchQuota: fetchMetaQuota,
+  getStoreKey: getQuotaCredentialStoreKey,
+  buildLoadingState: (file) => ({
+    status: 'loading',
+    windows: [],
+    observedAtMs: Date.now(),
+    plan: null,
+    isSubscriptionActive: null,
+    quotaInventoryObserved: false,
+    ...buildQuotaCredentialIdentity(file),
+  }),
+  buildSuccessState: (data, file) => ({
+    status: 'success',
+    windows: data.windows,
+    observedAtMs: data.observedAtMs,
+    plan: data.plan,
+    isSubscriptionActive: data.isSubscriptionActive,
+    quotaInventoryObserved: data.quotaInventoryObserved,
+    ...buildQuotaCredentialIdentity(file),
+    fetchedAtMs: data.observedAtMs ?? Date.now(),
+  }),
+  buildErrorState: (message, status, file) => ({
+    status: 'error',
+    windows: [],
+    observedAtMs: Date.now(),
+    plan: null,
+    isSubscriptionActive: null,
+    quotaInventoryObserved: false,
+    error: message,
+    errorStatus: status,
+    ...buildQuotaCredentialIdentity(file),
+    failedAtMs: Date.now(),
+  }),
+  scopeState: scopeCredentialQuotaState,
+};
+

@@ -37,7 +37,12 @@ export interface UseUsageDataReturn {
   usageServiceAvailable: boolean;
   setModelPrices: (prices: Record<string, ModelPrice>) => Promise<void>;
   loadApiKeyAliases: () => Promise<void>;
-  syncModelPrices: (models?: string[]) => Promise<ModelPriceSyncResponse>;
+  syncModelPrices: (
+    models?: string[],
+    options?: {
+      includeRuntimeModels?: boolean;
+    }
+  ) => Promise<ModelPriceSyncResponse>;
   exportUsage: () => Promise<UsageExportResponse>;
   importUsage: (file: File, options?: UsageImportOptions) => Promise<UsageImportResponse>;
   cancelUsageImport: (sessionId: string, file?: File) => Promise<UsageImportSession | null>;
@@ -46,6 +51,7 @@ export interface UseUsageDataReturn {
 
 export interface UsageImportOptions {
   signal?: AbortSignal;
+  sessionId?: string;
   onProgress?: (progress: UsageImportProgress) => void;
 }
 
@@ -71,6 +77,11 @@ export function useUsageData({
   const modelPriceServiceBase = featureAvailability.modelPricesAvailable
     ? featureAvailability.managerServiceBase
     : '';
+  const localModelPricesAvailable =
+    !modelPriceServiceBase &&
+    !featureAvailability.checking &&
+    featureAvailability.panelHostConfirmed &&
+    featureAvailability.panelHostMode === 'external_panel';
   const usageEventsServiceBase = featureAvailability.requestMonitoringAvailable
     ? featureAvailability.managerServiceBase
     : '';
@@ -100,11 +111,21 @@ export function useUsageData({
   );
 
   const syncModelPricesFromApi = useCallback(
-    async (models?: string[]): Promise<ModelPriceSyncResponse> => {
+    async (
+      models?: string[],
+      options?: {
+        includeRuntimeModels?: boolean;
+      }
+    ): Promise<ModelPriceSyncResponse> => {
       if (!modelPriceServiceBase) {
         throw new Error('model_price_sync_requires_usage_service');
       }
-      return usageServiceApi.syncModelPrices(modelPriceServiceBase, managementKey, models);
+      return usageServiceApi.syncModelPrices(
+        modelPriceServiceBase,
+        managementKey,
+        models,
+        options
+      );
     },
     [managementKey, modelPriceServiceBase]
   );
@@ -125,6 +146,7 @@ export function useUsageData({
         base: usageEventsServiceBase,
         managementKey,
         file,
+        sessionId: options?.sessionId,
         signal: options?.signal,
         onProgress: options?.onProgress,
       });
@@ -227,21 +249,28 @@ export function useUsageData({
 
   const setModelPrices = useCallback(
     async (prices: Record<string, ModelPrice>) => {
-      setModelPricesState(prices);
-      try {
-        const response = await saveModelPricesToApi(prices);
-        setModelPricesState(response.prices ?? prices);
-        clearModelPrices();
-      } catch {
+      if (localModelPricesAvailable) {
         saveModelPrices(prices);
+        setModelPricesState(prices);
+        return;
       }
+
+      // A Manager rejection is not a successful browser-only save.
+      const response = await saveModelPricesToApi(prices);
+      setModelPricesState(response.prices ?? prices);
+      clearModelPrices();
     },
-    [saveModelPricesToApi]
+    [localModelPricesAvailable, saveModelPricesToApi]
   );
 
   const syncModelPrices = useCallback(
-    async (models?: string[]) => {
-      const response = await syncModelPricesFromApi(models);
+    async (
+      models?: string[],
+      options?: {
+        includeRuntimeModels?: boolean;
+      }
+    ) => {
+      const response = await syncModelPricesFromApi(models, options);
       setModelPricesState(response.prices ?? {});
       clearModelPrices();
       return response;

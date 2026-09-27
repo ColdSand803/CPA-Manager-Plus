@@ -27,7 +27,7 @@ export type AccountsView = 'accounts' | 'health' | 'oauth';
 export type DetailTab = 'overview' | 'quota' | 'config' | 'models' | 'diagnostics';
 export type SortableAccountColumn = Extract<
   AccountRowSortKey,
-  'name' | 'plan' | 'note' | 'reset' | 'priority' | 'recent' | 'quota' | 'created'
+  'name' | 'plan' | 'note' | 'reset' | 'remaining' | 'priority' | 'recent' | 'quota' | 'created'
 >;
 export type AccountSortFieldValue = 'default' | SortableAccountColumn;
 type AntigravityQuotaMatrixWindowKind = Extract<AccountQuotaWindowKind, 'five_hour' | 'weekly'>;
@@ -66,6 +66,7 @@ export const ACCOUNT_SORT_DEFAULT_DIRECTIONS: Record<
   plan: 'asc',
   note: 'asc',
   reset: 'asc',
+  remaining: 'asc',
   priority: 'desc',
   recent: 'desc',
   quota: 'desc',
@@ -84,6 +85,7 @@ export const ACCOUNT_SORT_FIELD_OPTIONS: Array<{
   DEFAULT_ACCOUNT_SORT_FIELD_OPTION,
   { value: 'name', labelKey: 'accounts.sort_name' },
   { value: 'plan', labelKey: 'accounts.col_plan' },
+  { value: 'remaining', labelKey: 'accounts.sort_remaining' },
   { value: 'note', labelKey: 'auth_files.note_label' },
   { value: 'reset', labelKey: 'accounts.col_reset' },
   { value: 'quota', labelKey: 'accounts.col_quota' },
@@ -224,6 +226,51 @@ export const formatQuotaResetDisplay = (
 
 const QUOTA_RESET_MINUTE_MS = 60 * 1000;
 const QUOTA_RESET_HOUR_MS = 60 * QUOTA_RESET_MINUTE_MS;
+
+export interface QuotaResetRemainingDuration {
+  unit: 'day' | 'hour' | 'minute' | 'subminute';
+  value: number;
+}
+
+export const getQuotaResetRemainingDuration = (
+  expiresAtMs: number | null | undefined,
+  nowMs = Date.now()
+): QuotaResetRemainingDuration | null => {
+  if (
+    typeof expiresAtMs !== 'number' ||
+    !Number.isFinite(expiresAtMs) ||
+    expiresAtMs <= 0 ||
+    !Number.isFinite(nowMs)
+  ) {
+    return null;
+  }
+  const diffMs = expiresAtMs - nowMs;
+  if (diffMs <= 0) {
+    return null;
+  }
+  if (diffMs >= QUOTA_RESET_DAY_MS) {
+    return {
+      unit: 'day',
+      value: Math.floor(diffMs / QUOTA_RESET_DAY_MS),
+    };
+  }
+  if (diffMs >= QUOTA_RESET_HOUR_MS) {
+    return {
+      unit: 'hour',
+      value: Math.floor(diffMs / QUOTA_RESET_HOUR_MS),
+    };
+  }
+  if (diffMs >= QUOTA_RESET_MINUTE_MS) {
+    return {
+      unit: 'minute',
+      value: Math.floor(diffMs / QUOTA_RESET_MINUTE_MS),
+    };
+  }
+  return {
+    unit: 'subminute',
+    value: 0,
+  };
+};
 
 export interface QuotaResetRelativeOptions {
   locale?: string;
@@ -558,6 +605,16 @@ const selectKimiQuotaListWindows = (
   return limits;
 };
 
+export const selectMetaQuotaListWindows = (
+  quotaWindows: AccountQuotaDisplayWindow[]
+): AccountQuotaDisplayWindow[] => {
+  const preferredKeys = ['meta:window', 'meta:weekly'];
+
+  return preferredKeys
+    .map((key) => quotaWindows.find((window) => window.key === key))
+    .filter((window): window is AccountQuotaDisplayWindow => Boolean(window));
+};
+
 export const resolveWindowDurationSeconds = (
   window: AccountQuotaDisplayWindow
 ): number => {
@@ -752,6 +809,9 @@ export const selectAccountQuotaMainListWindows = (
         candidates = quotaWindows.filter((window) => window.windowMode !== 'non_window');
       }
       break;
+    case 'meta':
+      candidates = selectMetaQuotaListWindows(quotaWindows);
+      break;
     case 'claude':
     default:
       candidates = standardQuotaWindows;
@@ -765,6 +825,9 @@ export const selectAccountQuotaMainListWindows = (
   }));
 
   indexed.sort((a, b) => {
+    if (row.provider === 'meta') {
+      return a.index - b.index;
+    }
     if (a.duration !== b.duration) {
       return a.duration - b.duration;
     }
@@ -803,6 +866,8 @@ export const selectAccountQuotaListWindows = (
       return standardQuotaWindows.length > 0
         ? standardQuotaWindows
         : quotaWindows.slice(0, 2);
+    case 'meta':
+      return selectMetaQuotaListWindows(quotaWindows);
     case 'claude':
       return standardQuotaWindows;
     default:
