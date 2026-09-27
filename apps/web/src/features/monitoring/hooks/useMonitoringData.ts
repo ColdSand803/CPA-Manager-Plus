@@ -120,6 +120,7 @@ interface MonitoringEventsPageState {
 export type MonitoringPresentationSnapshot = Pick<
   UseMonitoringDataReturn,
   | 'summary'
+  | 'coverage'
   | 'timeline'
   | 'timelineGranularity'
   | 'hourlyDistribution'
@@ -217,6 +218,20 @@ export const mergeMonitoringEventsPageItems = (
     0,
     MONITORING_EVENTS_RETENTION_LIMIT
   );
+};
+
+export const resetMonitoringEventsPageCursor = (
+  state: MonitoringEventsPageState
+): MonitoringEventsPageState => {
+  if (state.beforeMs === null && state.beforeId === null && !state.loadingMore) {
+    return state;
+  }
+  return {
+    ...state,
+    beforeMs: null,
+    beforeId: null,
+    loadingMore: false,
+  };
 };
 
 export const withoutMonitoringSnapshotEvents = (
@@ -449,6 +464,7 @@ export function useMonitoringData({
         claudeApiKeys: config?.claudeApiKeys || [],
         codexApiKeys: config?.codexApiKeys || [],
         xaiApiKeys: config?.xaiApiKeys || [],
+        metaApiKeys: config?.metaApiKeys || [],
         vertexApiKeys: config?.vertexApiKeys || [],
         openaiCompatibility: config?.openaiCompatibility || [],
       }),
@@ -646,6 +662,19 @@ export function useMonitoringData({
       };
     }
   }, [analytics.error]);
+
+  useEffect(() => {
+    if (activeDataTab !== 'realtime') {
+      let cancelled = false;
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setEventsPageState((previous) => resetMonitoringEventsPageCursor(previous));
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [activeDataTab]);
 
   const loadMoreEvents = useCallback(() => {
     if (
@@ -864,9 +893,7 @@ export function useMonitoringData({
       channels: uniqueOptionValues(rangeFilteredRows.map((row) => row.channel)),
       headerTraceIds: uniqueOptionValues(rangeFilteredRows.map((row) => row.headerTraceId)),
     };
-  },
-    [apiKeyDisplayMap, rangeFilteredRows]
-  );
+  }, [apiKeyDisplayMap, rangeFilteredRows]);
   const analyticsFilterOptions =
     currentFilterSelectorsData?.filter_options ?? currentAnalyticsData?.filter_options;
   const filterOptions = useMemo(() => {
@@ -931,6 +958,7 @@ export function useMonitoringData({
   const computedPresentationSnapshot = useMemo<MonitoringPresentationSnapshot>(
     () => ({
       summary,
+      coverage: currentAnalyticsData?.coverage,
       timeline: timelineData.points,
       timelineGranularity: timelineData.granularity,
       hourlyDistribution,
@@ -956,6 +984,7 @@ export function useMonitoringData({
       accountRows,
       apiKeyRows,
       channelRows,
+      currentAnalyticsData?.coverage,
       displayEventsHasMore,
       displayEventsTotalCount,
       eventsLoadedCount,
@@ -1057,6 +1086,7 @@ export function useMonitoringData({
     channels,
     channelsLoaded,
     summary: presentationSnapshot.summary,
+    coverage: presentationSnapshot.coverage,
     metadata,
     statusChips,
     timeline: presentationSnapshot.timeline,

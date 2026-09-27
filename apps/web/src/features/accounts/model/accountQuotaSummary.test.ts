@@ -13,7 +13,9 @@ const emptyStores = (): AccountQuotaStores => ({
   antigravityQuota: {},
   claudeQuota: {},
   codexQuota: {},
+  devinQuota: {},
   kimiQuota: {},
+  metaQuota: {},
   xaiQuota: {},
 });
 
@@ -136,6 +138,60 @@ describe('resolveAccountQuota', () => {
       status: 'unknown',
       remainingPercent: null,
       usedPercent: null,
+    });
+  });
+
+  it('does not expose quota when plan is unknown even if positive on-demand limit exists', () => {
+    const file = { name: 'xai-unknown-payg.json', type: 'xai' } as AuthFileItem;
+    const stores = emptyStores();
+    stores.xaiQuota[file.name] = {
+      ...buildQuotaCredentialIdentity(file),
+      status: 'success',
+      billing: makeXaiBilling({
+        periodType: 'monthly',
+        monthlyLimitCents: null,
+        onDemandCapCents: 5_000,
+        onDemandUsedCents: 2_500,
+        onDemandUsedPercent: 50,
+        billingPeriodEnd: '2026-10-01T00:00:00Z',
+      }),
+    };
+
+    expect(resolveAccountQuota(file, stores)).toMatchObject({
+      status: 'unknown',
+      remainingPercent: null,
+      usedPercent: null,
+    });
+  });
+
+  it('keeps account quota summary fail-closed unknown for unconfirmed plan even with valid weekly observation (issue #744)', () => {
+    const file = { name: 'xai-issue-744.json', type: 'xai', planType: null } as AuthFileItem;
+    const stores = emptyStores();
+    stores.xaiQuota[file.name] = {
+      ...buildQuotaCredentialIdentity(file),
+      status: 'success',
+      billing: makeXaiBilling({
+        periodType: 'weekly',
+        usagePercent: 2.0,
+        periodStart: '2026-09-11T13:42:16.586061+00:00',
+        periodEnd: '2026-09-18T13:42:16.586061+00:00',
+        productUsage: [{ product: 'GrokBuild', usagePercent: 2.0 }],
+        monthlyLimitCents: 0,
+        usedCents: 0,
+        includedUsedCents: 0,
+        onDemandCapCents: 0,
+        onDemandUsedCents: 0,
+        onDemandUsedPercent: null,
+        billingPeriodEnd: '2026-10-01T00:00:00Z',
+        usedPercent: 0,
+      }),
+    };
+
+    expect(resolveAccountQuota(file, stores)).toMatchObject({
+      status: 'unknown',
+      remainingPercent: null,
+      usedPercent: null,
+      planType: null,
     });
   });
 
@@ -416,6 +472,128 @@ describe('resolveAccountQuota', () => {
     };
 
     expect(resolveAccountQuota(file, stores).planType).toBe('Antigravity Future');
+  });
+
+  it('resolves Devin quota summary choosing the limiting window and preserving live plan', () => {
+    const file = { name: 'devin.json', type: 'devin', authIndex: 'd-1' };
+    const stores = emptyStores();
+    stores.devinQuota['devin.json::d-1'] = {
+      status: 'success',
+      authFileKey: 'devin.json::d-1',
+      authFileName: 'devin.json',
+      authIndex: 'd-1',
+      authFileIdentityVerified: true,
+      windows: [
+        { id: 'daily', remainingPercent: 0, resetAtMs: 1726400000000, periodHours: 24 },
+        { id: 'weekly', remainingPercent: 80, resetAtMs: 1726900000000, periodHours: 168 },
+      ],
+      plan: 'Pro',
+      planStartMs: 1726000000000,
+      planEndMs: 1727000000000,
+      observedAtMs: 1726000000100,
+      fetchedAtMs: 1726000000100,
+    };
+
+    const exhaustedSummary = resolveAccountQuota(file, stores);
+    expect(exhaustedSummary.status).toBe('exhausted');
+    expect(exhaustedSummary.remainingPercent).toBe(0);
+    expect(exhaustedSummary.usedPercent).toBe(100);
+    expect(exhaustedSummary.planType).toBe('Pro');
+    expect(exhaustedSummary.resetAccuracy).toBe('exact');
+
+    // daily = 54, weekly = 77 -> summary = 54
+    stores.devinQuota['devin.json::d-1'].windows[0].remainingPercent = 54;
+    stores.devinQuota['devin.json::d-1'].windows[1].remainingPercent = 77;
+
+    const activeSummary = resolveAccountQuota(file, stores);
+    expect(activeSummary.status).toBe('ok');
+    expect(activeSummary.remainingPercent).toBe(54);
+    expect(activeSummary.usedPercent).toBe(46);
+    expect(activeSummary.planType).toBe('Pro');
+
+    // daily = 80, weekly = 35 -> summary = 35 (limiting window = min(daily, weekly))
+    stores.devinQuota['devin.json::d-1'].windows[0].remainingPercent = 80;
+    stores.devinQuota['devin.json::d-1'].windows[1].remainingPercent = 35;
+
+    const reverseSummary = resolveAccountQuota(file, stores);
+    expect(reverseSummary.status).toBe('ok');
+    expect(reverseSummary.remainingPercent).toBe(35);
+    expect(reverseSummary.usedPercent).toBe(65);
+    expect(reverseSummary.planType).toBe('Pro');
+  });
+
+  it('resolves Meta quota summary choosing the limiting window and preserving live plan', () => {
+    const file = { name: 'meta.json', type: 'meta', authIndex: 'm-1' } as AuthFileItem;
+    const stores = emptyStores();
+    stores.metaQuota['meta.json::m-1'] = {
+      status: 'success',
+      authFileKey: 'meta.json::m-1',
+      authFileName: 'meta.json',
+      authIndex: 'm-1',
+      authFileIdentityVerified: true,
+      windows: [
+        {
+          id: 'window',
+          usedPercent: 15,
+          resetAtMs: 1726400000000,
+          resetAccuracy: 'exact',
+          limitWindowSeconds: 3600,
+          quotaProgressObservedAtMs: 1726398000000,
+        },
+        {
+          id: 'weekly',
+          usedPercent: 60,
+          resetAtMs: 1726900000000,
+          resetAccuracy: 'exact',
+          limitWindowSeconds: null,
+          quotaProgressObservedAtMs: 1726398000000,
+        },
+      ],
+      plan: 'Meta Pro',
+      isSubscriptionActive: true,
+      quotaInventoryObserved: true,
+      observedAtMs: 1726398000000,
+      fetchedAtMs: 1726398000000,
+    };
+
+    // weekly (40) < window (85) -> limiting window is weekly (40)
+    const summary = resolveAccountQuota(file, stores);
+    expect(summary.status).toBe('ok');
+    expect(summary.remainingPercent).toBe(40);
+    expect(summary.usedPercent).toBe(60);
+    expect(summary.planType).toBe('Meta Pro');
+    expect(summary.resetAccuracy).toBe('exact');
+    expect(summary.resetAtMs).toBe(1726900000000);
+
+    // exhausted when remaining is 0
+    stores.metaQuota['meta.json::m-1'].windows[0].usedPercent = 100;
+    const exhaustedSummary = resolveAccountQuota(file, stores);
+    expect(exhaustedSummary.status).toBe('exhausted');
+    expect(exhaustedSummary.remainingPercent).toBe(0);
+    expect(exhaustedSummary.usedPercent).toBe(100);
+
+    // unknown when usedPercent is null
+    stores.metaQuota['meta.json::m-1'].windows[0].usedPercent = null;
+    stores.metaQuota['meta.json::m-1'].windows[1].usedPercent = null;
+    const unknownSummary = resolveAccountQuota(file, stores);
+    expect(unknownSummary.status).toBe('unknown');
+    expect(unknownSummary.remainingPercent).toBeNull();
+    expect(unknownSummary.usedPercent).toBeNull();
+
+    // error state
+    stores.metaQuota['meta.json::m-1'].status = 'error';
+    stores.metaQuota['meta.json::m-1'].error = 'Quota fetch failed';
+    const errorSummary = resolveAccountQuota(file, stores);
+    expect(errorSummary.status).toBe('error');
+
+    // credential identity mismatch resolves to unknown
+    const otherStores = emptyStores();
+    otherStores.metaQuota['meta.json::other'] = {
+      ...stores.metaQuota['meta.json::m-1'],
+      authFileKey: 'meta.json::other',
+    };
+    const mismatchSummary = resolveAccountQuota(file, otherStores);
+    expect(mismatchSummary.status).toBe('unknown');
   });
 });
 

@@ -8,6 +8,8 @@ const emptyStores = () => ({
   claudeQuota: {},
   codexQuota: {},
   kimiQuota: {},
+  devinQuota: {},
+  metaQuota: {},
   xaiQuota: {},
 });
 
