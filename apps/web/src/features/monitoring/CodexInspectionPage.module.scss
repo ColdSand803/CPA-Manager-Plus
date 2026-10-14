@@ -1714,7 +1714,7 @@
   z-index: 1200;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0.16);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.48));
 }
 
 .xaiInferenceToggle {
@@ -1834,7 +1834,7 @@
   overflow: hidden;
   border-left: 1px solid var(--inspect-line);
   background: var(--inspect-surface);
-  box-shadow: -18px 0 36px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--drawer-shadow, -18px 0 36px rgba(0, 0, 0, 0.25));
 }
 
 .configDrawerHeader {

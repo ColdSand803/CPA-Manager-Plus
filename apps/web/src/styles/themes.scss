@@ -26,6 +26,8 @@
   --app-border-strong: rgba(15, 23, 42, 0.12);
   --app-shadow: none;
   --app-shadow-soft: none;
+  --overlay-bg: rgba(0, 0, 0, 0.48);
+  --drawer-shadow: -24px 0 48px rgba(0, 0, 0, 0.18);
   --app-text-primary: #2c3e50;
   --app-text-regular: #5f6c7b;
   --app-text-muted: #8b95a6;
@@ -295,6 +297,8 @@
   --app-border-strong: rgba(255, 255, 255, 0.12);
   --app-shadow: none;
   --app-shadow-soft: none;
+  --overlay-bg: rgba(0, 0, 0, 0.68);
+  --drawer-shadow: -24px 0 48px rgba(0, 0, 0, 0.48);
   --app-text-primary: #e5e5e5;
   --app-text-regular: #a3a3a3;
   --app-text-muted: #7a7a7a;

@@ -101,6 +101,8 @@
   --app-shadow: none;
   --app-shadow-soft: none;
   --floating-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --overlay-bg: rgba(0, 0, 0, 0.45);
+  --drawer-shadow: -20px 0 40px rgba(0, 0, 0, 0.16);
 
   --c-scrollbar: #e5e5e5;
   --c-scrollbar-hover: #bbbbbb;
@@ -196,6 +198,8 @@
   --app-shadow: none;
   --app-shadow-soft: none;
   --floating-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(0, 0, 0, 0.72);
+  --drawer-shadow: -20px 0 40px rgba(0, 0, 0, 0.65);
 
   --c-scrollbar: #181818;
   --c-scrollbar-hover: #2e2e2e;

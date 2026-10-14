@@ -27,11 +27,8 @@ import {
   IconSidebarSystem,
   IconSidebarUsage,
 } from '@/components/ui/icons';
-import {
-  CPAMP_SYMBOL_COLOR_PNG_URL,
-  CPAMP_WORDMARK_COLOR_PNG_URL,
-  CPAMP_WORDMARK_ON_DARK_PNG_URL,
-} from '@/assets/brand';
+import { CPAMP_WORDMARK_COLOR_PNG_URL, CPAMP_WORDMARK_ON_DARK_PNG_URL } from '@/assets/brand';
+import { DynamicLogo } from '@/components/common/DynamicLogo';
 import {
   useAuthStore,
   useConfigStore,
@@ -1028,11 +1025,7 @@ function MainLayoutContent({ routeBase = '', demoMode = false }: MainLayoutProps
         >
           <div className="sidebar-brand" title={fullBrandName}>
             <div className="sidebar-brand-main">
-              <img
-                src={CPAMP_SYMBOL_COLOR_PNG_URL}
-                alt={showSidebarLabels ? '' : 'CPA Manager Plus'}
-                className="sidebar-brand-symbol"
-              />
+              <DynamicLogo className="sidebar-brand-symbol" size={32} />
               {showSidebarLabels && (
                 <>
                   <img
