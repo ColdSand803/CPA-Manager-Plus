@@ -7,7 +7,7 @@
   z-index: $z-modal;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0.52);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.48));
 
   @include mobile {
     align-items: flex-end;
@@ -30,7 +30,7 @@
   max-width: 100%;
   background: var(--app-surface-strong, var(--bg-primary));
   border-left: 1px solid var(--border-color);
-  box-shadow: -24px 0 48px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--drawer-shadow, -24px 0 48px rgba(0, 0, 0, 0.22));
   outline: none;
 
   @include mobile {
